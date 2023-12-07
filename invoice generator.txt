@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head><meta http-equiv="cache-control" content="no-cache"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="-1"><style type="text/css">body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #f4f4f4;
+}
+
+.invoice-container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.invoice {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.invoice-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.invoice-header div {
+    flex: 1;
+    margin-right: 10px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+input, select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+button {
+    background-color: #4caf50;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+.invoice-total {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.invoice-total label {
+    margin-right: 10px;
+}
+</style>
+
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Invoice Generator</title>
+</head>
+<body>
+
+<div class="invoice-container">
+    <h1>Invoice Generator</h1>
+    
+    <div id="invoice" class="invoice">
+        <div class="invoice-header">
+            <h2>Invoice</h2>
+            <div>
+                <label for="invoiceNumber">Invoice Number:</label>
+                <input type="text" id="invoiceNumber">
+            </div>
+            <div>
+                <label for="date">Date:</label>
+                <input type="date" id="date">
+            </div>
+            <div>
+                <label for="billTo">Bill To:</label>
+                <input type="text" id="billTo">
+            </div>
+        </div>
+
+        <table id="itemTable">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Item rows will be dynamically added here -->
+            </tbody>
+        </table>
+
+        <button onclick="addItem()">Add Item</button>
+
+        <div class="invoice-total">
+            <label>Total:</label>
+            <span id="total">0.00</span>
+        </div>
+
+        <button onclick="generateInvoice()">Generate</button>
+        <button onclick="printInvoice()">Print</button>
+    </div>
+
+    <div id="result" class="result-container">
+        <!-- Investment result will be displayed here -->
+    </div>
+</div>
+
+<script src="script.js"></script>
+
+
+<script>let total = 0;
+
+function addItem() {
+    const tableBody = document.querySelector("#itemTable tbody");
+
+    const newRow = document.createElement("tr");
+    newRow.innerHTML = `
+        <td><input type="text" class="description"></td>
+        <td><input type="number" class="quantity" min="1" value="1"></td>
+        <td><input type="number" class="price" min="0.01" step="0.01" value="0.00"></td>
+        <td class="total">0.00</td>
+        <td><button onclick="removeItem(this)">Remove</button></td>
+    `;
+
+    tableBody.appendChild(newRow);
+
+    updateTotal();
+}
+
+function removeItem(button) {
+    const row = button.parentNode.parentNode;
+    row.parentNode.removeChild(row);
+
+    updateTotal();
+}
+
+function updateTotal() {
+    const totalElements = document.querySelectorAll(".total");
+    total = 0;
+
+    totalElements.forEach((element) => {
+        const row = element.parentNode;
+        const quantity = row.querySelector(".quantity").value;
+        const price = row.querySelector(".price").value;
+        const rowTotal = parseFloat(quantity) * parseFloat(price);
+
+        total += rowTotal;
+        element.textContent = rowTotal.toFixed(2);
+    });
+
+    document.getElementById("total").textContent = total.toFixed(2);
+}
+
+function generateInvoice() {
+    const invoiceData = {
+        invoiceNumber: document.getElementById("invoiceNumber").value,
+        date: document.getElementById("date").value,
+        billTo: document.getElementById("billTo").value,
+        items: [],
+        total: total.toFixed(2)
+    };
+
+    const itemRows = document.querySelectorAll("#itemTable tbody tr");
+    itemRows.forEach((row) => {
+        const description = row.querySelector(".description").value;
+        const quantity = row.querySelector(".quantity").value;
+        const price = row.querySelector(".price").value;
+
+        invoiceData.items.push({
+            description: description,
+            quantity: quantity,
+            price: price,
+            total: (quantity * price).toFixed(2)
+        });
+    });
+
+    displayResult(invoiceData);
+}
+
+function displayResult(invoiceData) {
+    const resultContainer = document.getElementById("result");
+    resultContainer.innerHTML = `
+        <h2>Generated Invoice</h2>
+        <p><strong>Invoice Number:</strong> ${invoiceData.invoiceNumber}</p>
+        <p><strong>Date:</strong> ${invoiceData.date}</p>
+        <p><strong>Bill To:</strong> ${invoiceData.billTo}</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${invoiceData.items.map(item => `
+                    <tr>
+                        <td>${item.description}</td>
+                        <td>${item.quantity}</td>
+                        <td>${item.price}</td>
+                        <td>${item.total}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+        <p><strong>Total:</strong> ${invoiceData.total}</p>
+    `;
+}
+
+function printInvoice() {
+    const resultContainer = document.getElementById("result");
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write('<html><head><title>Print</title>');
+    printWindow.document.write('<link rel="
+    </script></body>
